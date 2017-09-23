@@ -1,0 +1,85 @@
+<html>
+<body>
+
+<meta name="viewport"
+      content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<script src="http://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
+
+
+    编号: <input type="text" id="id2" name="id2">  <br>
+    姓名: <input type="text" id="username" name="username">  <br>
+
+    年龄: <input type="text" id="age" name="age">
+
+<form id= "uploadForm" encype = "multipart/form-data">
+    <p >指定文件名： <input type="text" name="filename" value= ""/></p >
+    <p >上传文件： <input type="file" name="fulAvatar"/></p>
+    <input type="button" value="上传" onclick="doUpload()" />
+</form>
+
+<input type="submit" id="sub" value="提交">
+
+
+<script>
+
+    function doUpload() {
+
+        var formData = new FormData($("#uploadForm")[0]);
+
+        console.log(formData)
+
+
+        $.ajax({
+            url: "./uploader",
+            type: 'POST',
+            data:formData,
+            processData:false,
+            async:false,
+            cache: false,
+            contentType: false,
+            success: function (res) {
+                    console.log(res)
+                    alert('添加成功')
+                }
+            });
+
+
+
+    }
+
+    $(function () {
+
+
+
+
+
+
+        $('#sub').click(function () {
+            var subdata = {}
+            subdata.id2 = $('#id2').val();
+            subdata.username = $('#username').val();
+            subdata.age = $('#age').val();
+
+
+            console.log(subdata)
+
+            $.ajax({
+                url: "./process_post",
+                type: 'POST',
+                data:subdata,
+                success: function (res) {
+                    console.log(res)
+                    alert('添加成功')
+                }
+            });
+
+
+
+        })
+    })
+
+</script>
+
+
+</body>
+</html>
