@@ -3,10 +3,7 @@ var bodyParser = require('body-parser');
 // var setdata = require('./db');
 var app = express();
 
-
 var urlencodedParser = bodyParser.urlencoded({ extended: false })
-
-
 
 app.use(express.static('public'));
 
@@ -14,13 +11,14 @@ app.get('/index.html', function (req, res) {
     res.sendFile( __dirname + "/" + "index.html" );
 })
 
-// app.use(express.static(path.join(__dirname, 'public')));
 
+
+//文件上传
 var formidable = require('formidable'),
     fs = require('fs'),
     TITLE = 'formidable上传示例',
     AVATAR_UPLOAD_FOLDER = '/images/',
-    domain = "http://localhost:8081";
+    domain = "http://localhost:8080";
 
 app.post('/uploader', function(req, res) {
 
@@ -37,7 +35,6 @@ app.post('/uploader', function(req, res) {
             res.render('index', { title: TITLE });
             return;
         }
-        console.log(files);
 
         var extName = '';  //后缀名
         switch (files.fulAvatar.type) {
@@ -61,7 +58,7 @@ app.post('/uploader', function(req, res) {
             return;
         }
 
-        var avatarName = files.fulAvatar.name;
+        var avatarName = Math.random()+'.'+extName;
         console.log(Math.random())
         console.log(avatarName)
         //图片写入地址；
@@ -76,20 +73,42 @@ app.post('/uploader', function(req, res) {
     });
 });
 
-app.post('/updataImg', function (req, res) {
 
-    var form = new multiparty.Form({uploadDir: './public/images'});
-    form.parse(req, function(err, fields, files) {
-        var filesTmp = JSON.stringify(files);
 
-        if(err){
-            console.log('parse error: ' + err);
-        } else {
-            testJson = eval("(" + filesTmp+ ")");
-            console.log(testJson.fileField[0].path);
-            res.json({imgSrc:testJson.fileField[0].path})
-            console.log('rename ok');
-        }
+//查询用户数据
+app.post('/query',urlencodedParser, function (req, res) {
+
+    var response = {
+        "id":req.body.userid
+    };
+    console.log(response);
+
+    //连接数据库
+    var MongoClient = require('mongodb').MongoClient;
+    var DB_CONN_STR = 'mongodb://localhost:27017/test';
+
+    var selectData = function(db, callback) {
+        //连接到表
+        var collection = db.collection('users');
+        //查询数据
+        var whereStr = {"id":req.body.userid};
+        collection.find(whereStr).toArray(function(err, result) {
+            if(err)
+            {
+                console.log('Error:'+ err);
+                return;
+            }
+            callback(result);
+        });
+    }
+
+    MongoClient.connect(DB_CONN_STR, function(err, db) {
+        console.log("连接成功！");
+        selectData(db, function(result) {
+            res.status(200).send(result);
+            console.log(result);
+            db.close();
+        });
     });
 
 
@@ -105,10 +124,6 @@ app.post('/process_post',urlencodedParser, function (req, res) {
         "age":req.body.age
     };
     console.log(response);
-
-    res.status(200).send(response);
-
-
 
     var MongoClient = require('mongodb').MongoClient;
     var DB_CONN_STR = 'mongodb://localhost:27017/test';
@@ -131,16 +146,17 @@ app.post('/process_post',urlencodedParser, function (req, res) {
     MongoClient.connect(DB_CONN_STR, function(err, db) {
         console.log("连接成功！");
         insertData(db, function(result) {
-            console.log(result);
+            res.status(200).send(result);
             db.close();
         });
     });
 
-    setdata.setUser(response)
-
 })
 
-var server = app.listen(8081, function () {
+
+
+//启动服务
+var server = app.listen(8080, function () {
 
     var host = server.address().address
     var port = server.address().port
